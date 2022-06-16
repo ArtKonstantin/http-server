@@ -2,6 +2,7 @@ package org.example;
 
 import com.google.common.primitives.Bytes;
 import org.example.exception.BadRequestException;
+import org.example.exception.DeadlineExceedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +10,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public class Main {
     public static void main(String[] args) {
@@ -34,11 +37,13 @@ public class Main {
     }
 
     private static void handleClient(final Socket socket) throws IOException {
+
         try (
                 socket;
                 final OutputStream out = socket.getOutputStream();
                 final InputStream in = socket.getInputStream();
         ) {
+            socket.setSoTimeout(30 * 1000);
             System.out.println(socket.getInetAddress());
 
             final String message = readMessage(in);
@@ -60,8 +65,15 @@ public class Main {
         final byte[] buffer = new byte[4096];
         int offset = 0;
         int length = buffer.length;
+        // deadline
+
+        Instant deadline = Instant.now().plus(60, ChronoUnit.SECONDS);
         // внутренний цикл чтения команды
         while (true) {
+            if (Instant.now().isAfter(deadline)) {
+                throw new DeadlineExceedException();
+            }
+
             final int read = in.read(buffer, offset, length); // read - сколько байт было прочитано
             offset += read; // offset = offset + read;
             length = buffer.length - offset;
@@ -71,8 +83,12 @@ public class Main {
                 break;
             }
 
+            if (read == -1) {
+                throw new BadRequestException("CRLFCRLF not found, no more data");
+            }
+
             // TODO: read timeout
-            if (read == 0 || length == 0) {
+            if (length == 0) {
                 throw new BadRequestException("CRLFCRLF not found");
             }
         }
