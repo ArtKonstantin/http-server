@@ -14,11 +14,18 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 public class Server {
+
+    public static final byte[] CRLFCRLF = {'\r', '\n', '\r', '\n'};
+    private final int port = 9999;
+    private final int soTimeout = 30 * 1000;
+    private final int readTimeout = 60 * 1000;
+    private final int bufferSize = 4096;
+
     public void start() {
         // ServerSocket
         // Socket
         try (
-                final ServerSocket serverSocket = new ServerSocket(9999);
+                final ServerSocket serverSocket = new ServerSocket(port);
         ) {
             while (true) {
                 // блокирующий вызов
@@ -43,7 +50,7 @@ public class Server {
                 final OutputStream out = socket.getOutputStream();
                 final InputStream in = socket.getInputStream();
         ) {
-            socket.setSoTimeout(30 * 1000);
+            socket.setSoTimeout(soTimeout);
             System.out.println(socket.getInetAddress());
 
             final String message = readMessage(in);
@@ -61,13 +68,12 @@ public class Server {
     }
 
     private String readMessage(final InputStream in) throws IOException {
-        final byte[] CRLFCRLF = {'\r', '\n', '\r', '\n'}; // TODO: move to constants
-        final byte[] buffer = new byte[4096];
+        final byte[] buffer = new byte[bufferSize];
         int offset = 0;
         int length = buffer.length;
         // deadline
 
-        Instant deadline = Instant.now().plus(60, ChronoUnit.SECONDS);
+        Instant deadline = Instant.now().plusMillis(readTimeout);
         // внутренний цикл чтения команды
         while (true) {
             if (Instant.now().isAfter(deadline)) {
