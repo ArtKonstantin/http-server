@@ -7,7 +7,7 @@
     <groupId>org.example</groupId>
     <artifactId>http-server</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <modules>
         <module>app</module>
         <module>server</module>
@@ -19,6 +19,7 @@
         <lombok.version>1.18.24</lombok.version>
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
         <guava.version>31.1-jre</guava.version>
+        <logback-classic.version>1.2.11</logback-classic.version>
     </properties>
 
     <dependencies>
@@ -32,6 +33,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
         </dependency>
     </dependencies>
 
